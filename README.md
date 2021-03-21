@@ -73,7 +73,7 @@ int main() {
 
 As can be seen, using join() pauses the main method, but does not necessarily pause the other threads from running since they were created before join() is called. However, the main method will wait until thread one is finished to go past one.join(), until thread two is finished to go past two.join(), and until thread three is finished to go past three.join().
 
-## Part 2: GDB (10 Points)
+## Part 2: GDB (5 Points)
 
 We have gone over basic GDB before in lab, but today will be focused around utilizing GDB with threading to debug programs that use multiple threads. To run gdb on a process that uses multiple threads, simply open it with gdb like any other executable (gdb \_\_\_\_, where \_\_\_\_ is the name of the executable). When you do so, you should be able to see output as such:
  
