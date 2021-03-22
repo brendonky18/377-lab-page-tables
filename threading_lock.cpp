@@ -25,7 +25,6 @@ void truth(bool value){
 		count++;
 	}
 	mtx.unlock();
-	mtx.lock();
 }
 
 int main() {
