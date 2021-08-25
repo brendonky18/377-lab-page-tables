@@ -1,4 +1,4 @@
-# COMPSCI 377 LAB #5: Threading
+# COMPSCI 377 LAB: Threading
 
 ## Purpose
 
