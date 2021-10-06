@@ -1,12 +1,12 @@
-# COMPSCI 377 LAB: Threading
+# COMPSCI 377 LAB: Page Tables
 
 ## Purpose
 
-This lab is designed to cover threads and how to use gdb to debug threads. Please make sure that all of your answers to questions in these labs come from work done on the Edlab environment – otherwise, they may be inconsistent results and will not receive points.
+This lab is designed to explore page tables, and how they are used in Xv6. Please make sure that all of your answers to questions in these labs come from work done on the Edlab environment – otherwise, they may be inconsistent results and will not receive points.
 
 Please submit your answers to this lab on Gradescope in the assignment marked “Lab #5’. All answers are due by the time specified on Gradescope. The TA present in your lab will do a brief explanation of the various parts of this lab, but you are expected to answer all questions by yourself. Please raise your hand if you have any questions during the lab section – TAs will be notified you are asking a question. Questions and Parts have a number of points marked next to them to signify their weight in this lab’s final grade. Labs are weighted equally, regardless of their total points.
 
-Once you have logged in to Edlab, you can clone this repo using
+<!-- Once you have logged in to Edlab, you can clone this repo using
 
 ```bash
 git clone https://github.com/umass-cs-377/377-lab-threading.git
@@ -16,127 +16,85 @@ Then you can use `cd` to open the directory you just cloned:
 
 ```bash
 cd 377-lab-threading
-```
+``` -->
 
-This repo includes a Makefile that allows you to locally compile and run all the sample code listed in this tutorial. You can compile them by running `make`. Feel free to modify the source files yourself, after making changes you can run `make` again to build new binaries from your modified files. You can also use `make clean` to remove all the built files, this command is usually used when something went wrong during the compilation so that you can start fresh.
+<!-- This repo includes a Makefile that allows you to locally compile and run all the sample code listed in this tutorial. You can compile them by running `make`. Feel free to modify the source files yourself, after making changes you can run `make` again to build new binaries from your modified files. You can also use `make clean` to remove all the built files, this command is usually used when something went wrong during the compilation so that you can start fresh. -->
 
-## Part 1: Threads (5 Points)
+## Part 1: Reviewing Page Tables
 
-With many programs, it can be advantageous to have multiple processes running at once (for example, a simple game server could be running several games at a time, one per process). To this end, we use threading, which allows us to run multiple processes from the same original process. We can make multiple threads conduct different operations, run simultaneously, or wait for each other to finish. Please look at the code below, and read the commented sections:
+This section is a review of the history behind the development of page tables. Understanding the problems encountered in the past with memory allocation will help you make more sense of how we've arrived at the current solution of page tables. If you feel confident in your understanding, you can attempt to answer the questions on Gradescope and skip over this section.
+<!-- 
+### Historical Approaches
+In the earliest days of computing, when a program needed to access a memory address, it would simply read directly from memory. In this way, there was only a single address space that corresponding to the computer's physical memory. As it became necessary to be able to switch between the execution of multiple programs came the problem of context switches. 
 
-threading.cpp
-```c++
-#include <iostream>
-#include <thread> 
-#include <chrono>
+As it became necessary to run multiple programs on a machine, the solution was to dedicated memory spaces for each program in memory and switching them out to the disk for every context switch. While programs were still small, and run in batch, this was not a significant problem, however as programs grew in size, and it became necessary to be able to switch between the execution of multiple programs, it was no longer an ideal solution. Disk operations are slow, and requiring big reads and writes for every context switch creates a large performance overhead. 
 
-using namespace std;
+To prevent this, the memory spaces for multiple programs can be loaded into memory simultaneously. While previous approaches had dealt simply with memory, this introduces a distinction between *physical memory* and *virtual memory* (and consequently *physical* and *virtual* addresses). Physical memory represents the bits that are actually stored in a computer's memory. Virtual memory is the abstraction of the computer's memory presented to the program.
 
-void printing(){
-	//simply prints out a string
-	cout << "377 is a class!\n";
-}
+When dealing with virtual memory, there are three crucial factors which must be ensured:
 
-void truth(bool value){
-	//prints out a truth or a lie if the value parameter is true or false, respectively
-	int count = 1;
-	while (count <= 10){
-		if (value){
-			cout << "#" << count << ": 377 is cool!\n";
-		} else {
-			cout << "#" << count << ": 377 is not cool...\n";
-		}
-		count++;
-	}
-}
+1. **Transparency**: Other programs should not have any way of knowing about what other programs are running.
+2. **Protection**: Programs should noe be able to interact with the memory of other programs, either deliberately or accidentally.
+3. <a name="effiency-property"></a> **Effiency**: Using virtual memory should not significantly impact the speed of memory operations.
 
-int main() {
-	std::thread one(truth, false); //Creates a thread that will run the truth() method with the parameter of 'false'
-	std::thread two(printing); //Creates a thread that will run the printing() method
-	std::thread three(truth, true); //Creates a thread that will run the truth() method with the parameter of 'true'
+Historically there have been three broad ways which virtual memory has been implemented:
 
-	//Each of the below lines starts a thread, and pauses the execution of the main function until each of them is finished.
-	one.join(); //Runs thread one
-	cout << "Thread #1 finished.\n";
+1. **Static allocation**: Some predetermined offset is added to a program's virtual address. This however cannot ensure protection and thus was never widely used.
+2. **Dynamic allocation**: A dedicated hardware component called the *Memory Management Unit* (MMU) allocates a block of memory to a program at runtime. Allocating large blocks can result in *internal fragmentation*, where a large section of memory is allocated to a program because it may be needed in the future, however until that point, it is allocated memory that isn't being utilized.
+3. **Segmentation**: Allocates multiple smaller blocks that are non-contigous and dynamically-sized to be allocated to a single program's address space. This avoids the problem of internal fragmentation as the individual segments can be dynamically allocated more space as needed.
 
-	two.join(); //Runs thread two
-	cout << "Thread #2 finished.\n";
+The last two approaches, however, introduce a new problem: *external fragmentation*. As programs are moved in and out of memory, allocating space for them in memory will gradually create small chunks of unallocated memory. These chunks while technically being free, are stuck between blocks of allocated memory, and if they are sufficiently small, then it is impossible for them to be utilized, resulting in wasted space.  -->
 
-	three.join(); //Runs thread three
-	cout << "Thread #3 finished.\n";
+<!-- ### Paging
 
-	cout << "All threads finished.\n";
+*Paging*, being the contemporary approach to virtual memory (and the subject ot today's lab) is the solution to this problem. By allocating memory to each program in a fixed-sized chunk, the computer can guarantee that it will always be able to fully utilize all of the unallocated memory it has available to it. While this does potentially re-introduce the problem of internal fragmentation, this can be minimized by adjusting the size of the blocks being allocated. In the context of physical memory, these blocks are known as *page frames*, while they are known simply as *pages* when applied to virtual memory. 
 
-	return 0;
-}
-```
+A *page table* is used in order to map a program's virtual addresses to a physical address, in a process known as *translation*. In order to use our page table to find the physical address, we take the highest order bits (the exact amount varies depending on the implementation) of the virtual address, known as the address's *virtual page number* or VPN. The VPN is used to index the list to get the *page table entry*, which simply contains the *physical page number*[*](## "also known as a physical frame number or PFN") or PPN, which tells us where the virtual page is located in physical memory. Knowing the PFN, and the size of the pages, it is then possible to calculate the offset to the page frame by multiplying. Then the remaining lower order bits can be used to find the physical address, which is some offset within the page.
 
-As can be seen, using join() pauses the main method, but does not necessarily pause the other threads from running since they were created before join() is called. However, the main method will wait until thread one is finished to go past one.join(), until thread two is finished to go past two.join(), and until thread three is finished to go past three.join().
+Due to the third property of effenciency, we want to make page table lookups as fast as possible.  -->
 
-## Part 2: GDB (5 Points)
+### Page Table Enhancements
+The simplest implementation of a page table is known as a *linear page table*. It can be thought of as a list of PPNs, which is indexed by a VPN in order to return the corresponding PPN. Linear page tables have two main flaws. The first is for every time a program wants to read from memory, it must perform two read operations: one from the page table, and then reading from physical memory. Secondly is that they require a lot of space; because it is a list, it will take up space for every page table entry, even if nothing has been allocated.
 
-We have gone over basic GDB before in lab, but today will be focused around utilizing GDB with threading to debug programs that use multiple threads. To run gdb on a process that uses multiple threads, simply open it with gdb like any other executable (gdb \_\_\_\_, where \_\_\_\_ is the name of the executable). When you do so, you should be able to see output as such:
- 
- \[New Thread 0x7f85e5bce700 (LWP 364)]
+The first improvement we can make is by using a cache to store the most important page table entries. This cache is known as the *translation lookaside buffer* or TLB. Because caches are significantly faster than RAM, this eliminated the problem of requiring an extra memory operations.
 
-As can be seen in the screenshot above, the memory address is shown for the created thread in the form 0x\_\_\_\_, and the LWP address for the thread is shown after LWP. The LWP address of a thread isn’t something we will work with in this class, but it useful to know that it is the identifier assigned to the process by the operating system. In the above image, the address of the thread is 0x7f85e5bce700, and the LWP of the thread is 364.
+To fix the latter issue there are two approaches. The first is to use fewer larger pages. This, however, exascerbates the issue of internal fragmentation. The more common approach is through *multi-level paging*. Rather than using a list-like structure, use a dictionary. This way, it is not necessary to maintain a page table entry for an unallocated page. 
 
-We can also find out more information about threads through our use of gdb. The ‘info threads’ command will list the info in the screenshot for all currently running threads from the process, as well as the id of its progenitor thread. The thread we are currently in will have an asterisk to its left. Threads that request time to wait will also show the amount of time they requested and need – the threads in threading.cpp will do this when run via gdb. Each of the threads also has a local ID listed on the right – using gdb, we can switch between these threads with the command ‘thread \_\_\_\_’, where \_\_\_\_ is the id of the thread we are trying to switch to.
+The multi-level, comes from the notion that this can then be used to create a tree of dictionaries. Where each dictionary is stored in a page, and then maps to multiple levels of page dictionaries, the final level of which (the root nodes) will contain the page table entries. Traditionally each level of an n-level tree is labelled from L0 at the leaves, to Ln-1 at the root. For example x86-64 uses 4 levels L0 to L3. In the worst case this will wind up using more memory than a linear page table, however this is an extreme scenario. In the average case, multi-level page tables can be expected to use less memory. 
 
-## Part 3: Mutex (5 Points)
+## Part 2: Understanding xv6 (5 Points)
 
-Threads can be extremely useful, but they can also encounter errors when they attempt to modify the same memory as one another. For example, if two threads each try to increment a value by 1, it may be that both operations occur at the same time, and the value is only incremented once instead of the two times it should be incremented instead. For this reason, we use various techniques to ensure that critical data components are not modified outside of their desired scope. One of these structures is called a lock, which is shared between threads and acts as per its name to prevent other threads from accessing sensitive data while it is locked. Please look at the modified threading.cpp below, called threading_lock.cpp:
+While knowing this is good and all, it is also useful to play around with an example in order to get a better feeling for how it workd. Forunately we have sv6 for that. xv6 is designed for a RISC-V 64 system architecture; as such, it uses 64-bit addresses. It uses a 3-level page table, where each page is addressed by 12 bits.
 
-threading_lock.cpp
-```c++
-#include <iostream>
-#include <thread> 
-#include <chrono>
-#include <mutex>
+In this lab we will be exploring and playing around with how paging is implemented by the xv6 operating system.
 
-using namespace std;
+There are 4 files we will be looking at in order:
+* `mmu.h`
+* `kalloc.c`
+* `exec.c`
+* `vm.c`
 
-std::mutex mtx; //Creates the shared mutex
+These files are very dense, and hard to make sense of, this is not helped by how the variables are named. Fortunately for us the makefile comes with an option to compile a PDF that is far more sensible. I encourage you to try and look at the source code and comments to see if you can get a sense of what is happening in each of the files. 
 
-void printing(){
-	//simply prints out a string
-	cout << "377 is a class!\n";
-}
+Now that you've given up, let's go ahead and look at a more sensible version. 
 
-void truth(bool value){
-	//prints out a truth or a lie if the value parameter is true or false, respectively
-	int count = 1;
-	mtx.lock(); //Locks the mutex
-	while (count <= 10){
-		if (value){
-			cout << "#" << count << ": 377 is cool!\n";
-		} else {
-			cout << "#" << count << ": 377 is not cool...\n";
-		}
-		count++;
-	}
-	mtx.unlock(); //Unlocks the mutex
-}
+Run the command `make xv6.pdf` to generate a more readable PDF version of the source code.
 
-int main() {
-	std::thread one(truth, false); //Creates a thread that will run the truth() method with the parameter of 'false'
-	std::thread two(printing); //Creates a thread that will run the printing() method
-	std::thread three(truth, true); //Creates a thread that will run the truth() method with the parameter of 'true'
+While this is useful for understanding what's happening in the code, please provide all answers on Gradescope referencing the source code. 
 
-	//Each of the below lines starts a thread, and pauses the execution of the main function until each of them is finished.
-	one.join(); //Runs thread one
-	cout << "Thread #1 finished.\n";
+### mmu.h
 
-	two.join(); //Runs thread two
-	cout << "Thread #2 finished.\n";
+This is a header file, which defines a number of constants in how the memory management unit works. 
+### kalloc.c
 
-	three.join(); //Runs thread three
-	cout << "Thread #3 finished.\n";
+This file defines how memory is allocated for various processes, relevant for us, is that it defines how pages are allocated for user processes.
 
-	cout << "All threads finished.\n";
+### exec.c
 
-	return 0;
-}
-```
+This file defines how a process gets executed by the OS.
 
-As you can see when running this code, thread #1 will always finish printing out its 10 statements before thread #3 prints out any of its 10 statements. This is because when we lock mtx at the start of truth(), it prevents further calls of truth() to progress past that point until we call mtx.unlock() from the same thread that locked it. In essence, this allows us to stop any threads that rely on mtx, ensuring that certain pieces of code do not run at the same time as one another even if we want multiple processes to be running simultaneously.
+### vm.c
+
+This file defines how virtual memory is handled. It defines the behavior of the page table, and tells the MMU how to convert a virtual address to a physical address. 
+
+There are a couple of important functions to look at. The first is `setupkvm`, where KVM stands for **K**ernel **V**irtual **M**emory. 
