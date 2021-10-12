@@ -27,21 +27,27 @@ This section is a review of the history behind the development of page tables. U
 
 While knowing this is good and all, it is also useful to play around with an example in order to get a better feeling for how it workd. Forunately we have sv6 for that. xv6 is designed for a RISC-V 64 system architecture; as such, it uses 64-bit addresses. It uses a 3-level page table, where each page is addressed by 12 bits.
 
-In this lab we will be exploring and playing around with how paging is implemented by the xv6 operating system.
+In this lab we will be exploring and playing around with how paging is implemented by the xv6 operating system. You should have already cloned xv6, so `cd` into the directory where that is located, it should be named `xv6-public`. You're in the right place if you run `ls` and get an output that looks like this:
 
-There are 4 files we will be looking at in order:
+```
+BUGS              console.o       ide.o         ls.c         runoff.list   trap.c
+LICENSE           cuth            init.asm      ls.d         runoff.spec   trap.d
+Makefile          date.h          init.c        ls.o         runoff1       trap.o
+Notes             defs.h          init.d        ls.sym       sh.asm        trapasm.S        
+README            dot-bochsrc     init.o        main.c       sh.c          trapasm.o        
+TRICKS            echo.asm        init.sym      main.d       sh.d          traps.h
+...
+```
+
+There should be many more files than what has been shown. I've only included the first few lines so you can check if you're in the right place.
+
+Now that you're in the right directory, there are 4 files we will be looking at in order:
 * `mmu.h`
 * `kalloc.c`
 * `exec.c`
 * `vm.c`
 
-These files are very dense, and hard to make sense of, this is not helped by how the variables are named. Fortunately for us the makefile comes with an option to compile a PDF that is far more sensible. I encourage you to try and look at the source code and comments to see if you can get a sense of what is happening in each of the files. 
-
-Now that you've given up, let's go ahead and look at a more sensible version. 
-
-Run the command `make xv6.pdf` to generate a more readable PDF version of the source code.
-
-While this is useful for understanding what's happening in the code, please provide all answers on Gradescope referencing the source code. 
+While you can use `vim` to view the files, I would reccomend downloading them from the [xv6 repository](https://github.com/mit-pdos/xv6-public) on to your own computer, and open them with your editor of choice...unless that is vim for whatever reason you wierdo.
 
 ### mmu.h
 
