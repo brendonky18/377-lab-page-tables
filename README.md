@@ -24,7 +24,7 @@ cd 377-lab-threading
 
 This section is a review of the history behind the development of page tables. Understanding the problems encountered in the past with memory allocation will help you make more sense of how we've arrived at the current solution of page tables. If you feel confident in your understanding, you can attempt to answer the questions on Gradescope and skip over this section. Otherwise I would encourage you to review [this](Paging-Explanation.md).
 
-## Part 2: Now You're Thinking with Pages (21 Points)
+## Part 2: Now You're Thinking with Pages (20 Points)
 
 Use the following to answer the questions 2.2 and 2.3 on gradescope. I
 
