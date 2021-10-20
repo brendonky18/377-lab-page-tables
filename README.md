@@ -80,13 +80,12 @@ A section of the memory:
       0x44            0x5c            0x1d            0xaf 
       0xb4            0x01            0x19            0x2d 
       0xd8            0xf0            0x4d            0xcc
-
 ```
 
 ### Multi-level page table
 Imagine a 16-bit address space, and multi-level page table with 2 levels, L0 and L1. Each VPN is 4 bits, and the offset is the remaining 8 bits.
 #### L1 Page Table
-A section of the L1 page table
+A section of the L1 page table:
 | VPN   | PPN    |
 |-------|--------|
 | `0x0` | `0xfc` |
@@ -99,7 +98,7 @@ A section of the L1 page table
 | `0x7` | `0xf1` |
 | ...   | ...    |
 #### L0 Page Tables
-A section of the last 4 L0 page tables
+A section of the last 4 L0 page tables:
 
 Page Tables at PPN `0xfb` and `0xfc`:
 | VPN(`0xfb`)| PPN         | | VPN(`0xfc`)| PPN         |      
@@ -118,9 +117,7 @@ Page Tables at PPN `0xfd` and `0xfe` rexpectively:
 | `0x7`      | `0x03`      | | `0xc`      | `0x04`      |      
 | `0x8`      | `0x01`      | | `0xd`      | `0x06`      |      
 | ...        | ...         | | ...        | ...         |    
-
-Page Table at PPN `0xfe`:
-   
+  
 
 Sections of memory:
 ```
