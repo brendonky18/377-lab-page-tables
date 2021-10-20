@@ -1,24 +1,27 @@
 
 ## Historical Approaches
+### Managing Memory 
 In the earliest days of computing, when a program needed to access a memory address, it would simply read directly from memory. In this way, there was only a single address space that corresponding to the computer's physical memory. As it became necessary to be able to switch between the execution of multiple programs came the problem of context switches. 
 
-As it became necessary to run multiple programs on a machine, the solution was to dedicated memory spaces for each program in memory and switching them out to the disk for every context switch. While programs were still small, and run in batch, this was not a significant problem, however as programs grew in size, and it became necessary to be able to switch between the execution of multiple programs, it was no longer an ideal solution. Disk operations are slow, and requiring big reads and writes for every context switch creates a large performance overhead. 
+As it became necessary to run multiple programs on a machine, the solution was to dedicated memory spaces for each program in memory and switching them out to the disk for every context switch. While programs were still small, and run in batch, this was not a significant problem, however as programs grew in size, and it became necessary to be able to switch between the execution of multiple programs, it was no longer an ideal solution. Disk operations are *s l o o o w*, and requiring big reads and writes for every context switch creates a large performance overhead. To prevent this, the memory spaces for multiple programs can be loaded into memory simultaneously. 
 
-To prevent this, the memory spaces for multiple programs can be loaded into memory simultaneously. While previous approaches had dealt simply with memory, this introduces a distinction between *physical memory* and *virtual memory* (and consequently *physical* and *virtual* addresses). Physical memory represents the bits that are actually stored in a computer's memory. Virtual memory is the abstraction of the computer's memory presented to the program.
+### Virtual Memory
+
+While previous approaches had dealt simply with a unified representation of memory, this development introduces a distinction between *physical memory* and *virtual memory* (and consequently *physical* and *virtual* addresses). Physical memory represents the bits that are actually stored in a computer's memory. Virtual memory is the abstraction of the computer's memory presented to the program.
 
 When dealing with virtual memory, there are three crucial factors which must be ensured:
 
 1. **Transparency**: Other programs should not have any way of knowing about what other programs are running.
-2. **Protection**: Programs should noe be able to interact with the memory of other programs, either deliberately or accidentally.
-3. <a name="effiency-property"></a> **Effiency**: Using virtual memory should not significantly impact the speed of memory operations.
+2. **Protection**: Programs should not be able to interact with the memory of other programs, either deliberately or accidentally.
+3. <a name="efficiency-property"></a> **Efficiency**: Using virtual memory should not significantly impact the speed of memory operations.
 
 Historically there have been three broad ways which virtual memory has been implemented:
 
 1. **Static allocation**: Some predetermined offset is added to a program's virtual address. This however cannot ensure protection and thus was never widely used.
-2. **Dynamic allocation**: A dedicated hardware component called the *Memory Management Unit* (MMU) allocates a block of memory to a program at runtime. Allocating large blocks can result in *internal fragmentation*, where a large section of memory is allocated to a program because it may be needed in the future, however until that point, it is allocated memory that isn't being utilized.
-3. **Segmentation**: Allocates multiple smaller blocks that are non-contigous and dynamically-sized to be allocated to a single program's address space. This avoids the problem of internal fragmentation as the individual segments can be dynamically allocated more space as needed.
+2. **Dynamic allocation**: A dedicated hardware component called the *Memory Management Unit* (MMU) allocates a block of memory to a program at runtime. Allocating large blocks can result in *internal fragmentation*, where a large section of memory is allocated to a program because it may be needed in the future, however until that point, it is allocated memory (which means it can't be used by other programs that may actually need it) that isn't being utilized.
+3. **Segmentation**: Allocates multiple smaller blocks that are non-contiguous and dynamically-sized to be allocated to a single program's address space. This avoids the problem of internal fragmentation as the individual segments can be dynamically allocated more space as needed.
 
-The last two approaches, however, introduce a new problem: *external fragmentation*. As programs are moved in and out of memory, allocating space for them in memory will gradually create small chunks of unallocated memory. These chunks while technically being free, are stuck between blocks of allocated memory, and if they are sufficiently small, then it is impossible for them to be utilized, resulting in wasted space.  -->
+The last two approaches, however, introduce a new problem: *external fragmentation*. As programs are moved in and out of memory, allocating space for them in memory will gradually create small chunks of unallocated memory. These chunks while technically being free, are stuck between blocks of allocated memory, and if they are sufficiently small, then it is impossible for them to be utilized, resulting in wasted space.
 
 ## Paging
 
@@ -29,7 +32,7 @@ A *page table* is used in order to map a program's virtual addresses to a physic
 Due to the third property of effenciency, we want to make page table lookups as fast as possible. 
 
 ## Page Table Enhancements
-The simplest implementation of a page table is known as a *linear page table*. It can be thought of as a list of PPNs, which is indexed by a VPN in order to return the corresponding PPN. Linear page tables have two main flaws. The first is for every time a program wants to read from memory, it must perform two read operations: one from the page table, and then reading from physical memory. Secondly is that they require a lot of space; because it is a list, it will take up space for every page table entry, even if nothing has been allocated.
+The simplest implementation of a page table is known as a *linear page table*. It can be thought of as a list/array of PPNs, which is indexed by a VPN in order to return the corresponding PPN. Linear page tables have two main flaws. The first is for every time a program wants to read from memory, it must perform two read operations: one from the page table, and then reading from physical memory. Secondly is that they require a lot of space; because it is a list, it will take up space for every page table entry, even if nothing has been allocated.
 
 The first improvement we can make is by using a cache to store the most important page table entries. This cache is known as the *translation lookaside buffer* or TLB. Because caches are significantly faster than RAM, this eliminated the problem of requiring an extra memory operations.
 
